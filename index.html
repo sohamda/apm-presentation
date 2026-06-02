@@ -399,7 +399,7 @@ html[data-theme="dark"] .str { color: #93c5fd; }
         <li>A README that says "install these extensions"</li>
         <li>A copy-pasted <code>copilot-instructions.md</code></li>
         <li>Ad-hoc MCP server configs in three different files</li>
-        <li>Skills, prompts, and rules duplicated per agent (Copilot, Claude, Cursor, Codex…)</li>
+        <li>Skills, prompts, and rules duplicated per agent (Copilot today, maybe Claude or Cursor tomorrow)</li>
         <li>No version pinning. No integrity. No reproducibility.</li>
       </ul>
     </div>
@@ -427,19 +427,19 @@ html[data-theme="dark"] .str { color: #93c5fd; }
 <span class="kw">dependencies</span>:
   <span class="kw">apm</span>:
     <span class="cmt"># Skills, prompts, agents, plugins — from any git repo, version-pinned</span>
-    - anthropics/skills/skills/frontend-design
+    - github/awesome-copilot/skills/review-and-refactor
     - github/awesome-copilot/plugins/context-engineering<span class="str">#v2.1</span>
     - microsoft/apm-sample-package<span class="str">#v1.0.0</span>
   <span class="kw">mcp</span>:
-    <span class="cmt"># MCP servers governed by the same manifest</span>
-    - <span class="kw">name</span>: io.github.github/github-mcp-server
-      <span class="kw">transport</span>: http</pre>
+    <span class="cmt"># MCP servers governed by the same manifest (registry entries are bare strings)</span>
+    - io.github.github/github-mcp-server</pre>
     <pre class="terminal"><span class="muted">$</span> <span class="prompt">git clone &lt;repo&gt; &amp;&amp; cd &lt;repo&gt;</span>
 <span class="muted">$</span> <span class="prompt">apm install</span>
 <span class="info">→</span> resolving 14 packages…
 <span class="info">→</span> writing .github/copilot-instructions.md
-<span class="info">→</span> writing .claude/, .cursor/, .codex/, AGENTS.md
-<span class="ok">✓ every agent is configured</span></pre>
+<span class="info">→</span> writing .github/prompts/, .github/instructions/
+<span class="info">→</span> writing AGENTS.md (read by Claude, Cursor, Codex, …)
+<span class="ok">✓ every agent in the repo is configured</span></pre>
   </div>
 </section>
 
@@ -466,13 +466,14 @@ html[data-theme="dark"] .str { color: #93c5fd; }
   <div class="eyebrow">Primitives</div>
   <h1>What APM packages can contain</h1>
   <div class="grid" style="margin-top: 8px;">
-    <div class="card"><h4>Instructions</h4><p>Repo conventions, architecture, do/don't rules. Rendered into <code>copilot-instructions.md</code>, <code>AGENTS.md</code>, etc.</p></div>
-    <div class="card"><h4>Skills</h4><p>Reusable capabilities (Agent Skills format). Drop-in from <code>anthropics/skills</code> or any repo.</p></div>
-    <div class="card"><h4>Prompts</h4><p>Slash-command prompts that work across harnesses.</p></div>
-    <div class="card"><h4>Agents</h4><p>Single-purpose agent primitives — e.g. <code>api-architect.agent.md</code>.</p></div>
-    <div class="card"><h4>Plugins</h4><p>Author once, export standard <code>plugin.json</code> for Copilot / Claude / Cursor.</p></div>
-    <div class="card"><h4>MCP servers</h4><p>Declared in the same manifest. Policy-checked before they touch disk.</p></div>
+    <div class="card"><h4>Instructions</h4><p>Repo conventions, architecture, do/don't rules. Rendered into <code>.github/copilot-instructions.md</code> (and <code>AGENTS.md</code> for non-Copilot harnesses).</p></div>
+    <div class="card"><h4>Prompts</h4><p>Slash-command prompts. Deployed to <code>.github/prompts/</code> for Copilot.</p></div>
+    <div class="card"><h4>Agents</h4><p>Single-purpose agent files (e.g. <code>api-architect.agent.md</code>). Deployed to <code>.github/agents/</code>.</p></div>
+    <div class="card"><h4>Skills</h4><p>Reusable capabilities in the Agent Skills format (<code>SKILL.md</code>). Drop-in from <code>anthropics/skills</code> or any repo.</p></div>
+    <div class="card"><h4>Hooks &amp; Commands</h4><p>Lifecycle hooks and CLI commands the agent can invoke. Governed by policy.</p></div>
+    <div class="card"><h4>MCP servers</h4><p>Declared in the same manifest. Policy-checked and trust-gated before they touch disk.</p></div>
   </div>
+  <p style="font-size:13px; color:var(--cp-text-muted); margin-top: 10px;">Eight primitive types in total (instructions, prompts, agents, skills, hooks, commands, plugins, MCP). Plugins are a bundle of the others — see slide 9.</p>
 </section>
 
 <section class="slide">
@@ -497,27 +498,31 @@ html[data-theme="dark"] .str { color: #93c5fd; }
 
 <section class="slide">
   <div class="eyebrow">Compile targets</div>
-  <h1>One manifest, every harness</h1>
-  <h3>The same packages render to whatever your team uses.</h3>
+  <h1>Copilot-first. Portable to the rest.</h1>
+  <h3>The same packages render to whichever harness your team uses.</h3>
   <div class="flow">
     <div class="node accent">apm.yml</div>
     <span class="arrow">→</span>
-    <div class="node accent">apm compile</div>
+    <div class="node accent">apm install</div>
     <span class="arrow">→</span>
-    <div class="node">GitHub Copilot</div>
-    <div class="node">Claude Code</div>
-    <div class="node">Cursor</div>
-    <div class="node">OpenCode</div>
-    <div class="node">Codex</div>
-    <div class="node">Gemini</div>
-    <div class="node">Windsurf</div>
+    <div class="node" style="border-color:var(--cp-accent); font-weight:600;">GitHub Copilot</div>
+    <span class="arrow">+</span>
+    <div class="node" style="font-size:11px;">Claude Code</div>
+    <div class="node" style="font-size:11px;">Cursor</div>
+    <div class="node" style="font-size:11px;">OpenCode</div>
+    <div class="node" style="font-size:11px;">Codex</div>
+    <div class="node" style="font-size:11px;">Gemini</div>
+    <div class="node" style="font-size:11px;">Windsurf</div>
   </div>
   <div class="card" style="margin-top: 24px;">
-    <h4>Zero-config Copilot</h4>
+    <h4>Zero-config for Copilot</h4>
     <p style="font-size:15px;">
-      <code>apm compile -t copilot</code> writes <code>.github/copilot-instructions.md</code>. VS Code and GitHub Copilot read it automatically — no settings to flip. APM itself dogfoods this target.
+      <code>apm install</code> writes <code>.github/copilot-instructions.md</code>, <code>.github/prompts/</code>, <code>.github/instructions/</code>, and <code>.vscode/mcp.json</code>. VS Code and GitHub Copilot read all of these automatically — no settings to flip. APM itself dogfoods the Copilot target.
     </p>
   </div>
+  <p style="font-size:13px; color:var(--cp-text-muted); margin-top: 12px;">
+    The same install also emits <code>AGENTS.md</code> in the repo root — the open <a href="https://agents.md" style="color:var(--cp-link)">agents.md</a> standard that Claude Code, Cursor, OpenCode, Codex, Gemini, and Windsurf all read. <strong>You don't have to use them; if a teammate does, their agent is already configured.</strong>
+  </p>
 </section>
 
 <section class="slide">
@@ -532,37 +537,65 @@ html[data-theme="dark"] .str { color: #93c5fd; }
       <pre class="code" id="ymlOut" style="margin-top: 6px;"></pre>
     </div>
     <div class="col">
-      <div style="margin-bottom: 8px; font-weight:600;">Generated <code>AGENTS.md</code> <span class="chip" id="lineCount">0 lines</span></div>
-      <pre class="code" id="mdOut" style="flex:1; min-height: 0; max-height: 60vh;"></pre>
+      <div style="margin-bottom: 8px; font-weight:600; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <span>Generated <code>AGENTS.md</code></span>
+        <span class="chip" id="lineCount">0 lines</span>
+      </div>
+      <pre class="terminal" style="padding:10px 14px; font-size:13px; margin-bottom:8px;"><span class="muted">$</span> <span class="prompt">apm install</span>   <span class="muted"># deploys primitives + writes AGENTS.md</span></pre>
+      <pre class="code" id="mdOut" style="flex:1; min-height: 0; max-height: 50vh;"></pre>
+      <div style="font-size:12px; color:var(--cp-text-muted); margin-top:6px;">
+        <code>apm install</code> deploys primitives (skills, prompts, agents, MCP) <em>and</em> writes the rendered <code>AGENTS.md</code>. For Copilot, that includes <code>.github/copilot-instructions.md</code>, <code>.github/prompts/</code>, <code>.github/instructions/</code>, and <code>.vscode/mcp.json</code>. Use <code>apm compile</code> separately to regenerate just the rendered instructions files.
+      </div>
     </div>
   </div>
 </section>
 
 <section class="slide">
-  <div class="eyebrow">Plugins &amp; marketplaces</div>
-  <h1>Author once, ship to every editor</h1>
-  <div class="two-col">
+  <div class="eyebrow">Plugins &amp; bundles</div>
+  <h1>Why plugins? Because a real capability is more than one file.</h1>
+  <h3>A skill is one primitive. A workflow needs several primitives bundled together.</h3>
+  <div class="two-col" style="margin-top: 4px;">
     <div class="col">
-      <h2>Build a plugin with real deps</h2>
-      <ul>
-        <li>Your plugin can <em>depend on</em> other APM packages — like npm transitive deps</li>
-        <li>Export a standard <code>plugin.json</code> for Copilot, Claude, or Cursor</li>
-        <li>Distribute via <code>apm pack</code> as a zipped package</li>
+      <h2>Concrete example</h2>
+      <p style="color:var(--cp-text-muted); margin: 4px 0 10px;">A <strong>Code Review</strong> plugin your platform team wants every repo to have:</p>
+      <ul style="margin-top: 0;">
+        <li>📜 <strong>Instructions</strong> — review rubric (security, perf, naming)</li>
+        <li>🤖 <strong>Agent</strong> — <code>code-reviewer.agent.md</code> activated by <code>/review</code></li>
+        <li>🧰 <strong>Skill</strong> — "summarise diff" + "find missing tests"</li>
+        <li>🔌 <strong>MCP server</strong> — <code>github-mcp-server</code> for posting PR comments</li>
       </ul>
-      <h2 style="margin-top:18px;">Marketplaces</h2>
-      <p style="color:var(--cp-text-muted)">Install from curated registries in one command. Deployed across all targets and pinned in the lockfile.</p>
+      <p style="font-size:14px; color:var(--cp-text-muted); margin-top: 8px;">
+        Without a bundle, every dev wires four files by hand. <strong>With <code>apm install acme/code-review</code>, all four primitives drop into the right places under <code>.github/</code> and <code>.vscode/</code> in one command — pinned in <code>apm.lock.yaml</code>.</strong>
+      </p>
+      <h2 style="margin-top:16px;">Marketplaces</h2>
+      <p style="color:var(--cp-text-muted); font-size:14px; margin:0;">Curated registries of packages. <code>apm marketplace add</code> + one <code>apm install</code>, lockfile-pinned. <code>apm pack</code> emits <code>marketplace.json</code> alongside the bundle when your manifest declares one.</p>
     </div>
     <div class="col">
-      <pre class="code"><span class="cmt"># install a plugin from a marketplace</span>
-<span class="kw">$</span> apm install acme/code-review-pack
+      <pre class="code" style="font-size:13px;"><span class="cmt"># package layout — primitives live in .apm/, not in apm.yml</span>
+acme/code-review/
+├── apm.yml                       <span class="cmt"># name, version, dependencies</span>
+├── .apm/
+│   ├── instructions/rubric.instructions.md
+│   ├── agents/code-reviewer.agent.md
+│   ├── skills/summarise-diff/SKILL.md
+│   └── skills/find-missing-tests/SKILL.md
+└── README.md
 
-<span class="cmt"># list everything resolved (incl. transitive)</span>
-<span class="kw">$</span> apm list --tree
+<span class="cmt"># apm.yml declares only deps, not the primitives themselves</span>
+<span class="kw">name</span>: code-review
+<span class="kw">version</span>: 1.2.0
+<span class="kw">dependencies</span>:
+  <span class="kw">apm</span>:
+    - acme/shared-style-guide<span class="str">#v3</span>   <span class="cmt"># transitive dep</span>
+  <span class="kw">mcp</span>:
+    - io.github.github/github-mcp-server</pre>
 
-<span class="cmt"># bundle your own plugin for distribution</span>
-<span class="kw">$</span> apm pack ./my-plugin
-   <span class="cmt">→ my-plugin-1.0.0.tgz</span>
-   <span class="cmt">→ plugin.json (Copilot/Claude/Cursor)</span></pre>
+      <pre class="code" style="margin-top:12px; font-size:13px;"><span class="cmt"># consume it from any repo</span>
+<span class="kw">$</span> apm install acme/code-review<span class="str">#v1.2.0</span>
+
+<span class="cmt"># or pack a single-file bundle for offline / air-gapped delivery</span>
+<span class="kw">$</span> apm pack <span class="cmt"># → build/code-review/ (plugin.json + agents/ + skills/ + commands/ + hooks/ + apm.lock.yaml)</span>
+<span class="kw">$</span> apm pack --archive <span class="cmt"># → build/code-review-1.2.0.tar.gz</span></pre>
     </div>
   </div>
 </section>
@@ -572,7 +605,7 @@ html[data-theme="dark"] .str { color: #93c5fd; }
   <h1>Treat prompts like the programs they are</h1>
   <div class="grid">
     <div class="card"><h4>Unicode scanning</h4><p>Every install blocks hidden bidi / zero-width characters that can hijack agent behavior.</p></div>
-    <div class="card"><h4>Lockfile integrity</h4><p><code>apm.lock</code> records resolved sources and content hashes — full provenance, drift-proof installs.</p></div>
+    <div class="card"><h4>Lockfile integrity</h4><p><code>apm.lock.yaml</code> records resolved sources and content hashes — full provenance, drift-proof installs. Bundles embed it too, so <code>apm install &lt;bundle&gt;</code> rehashes every file before writing.</p></div>
     <div class="card"><h4>MCP trust gating</h4><p>Transitive MCP servers don't get installed unless explicitly declared or trusted.</p></div>
     <div class="card"><h4>apm audit</h4><p>On-demand scan for compromised packages, hidden chars, lockfile drift. CI-friendly.</p></div>
     <div class="card"><h4>Drift detection</h4><p>Detects when generated files diverge from what the manifest says — fail the build instead of shipping silently.</p></div>
@@ -598,31 +631,43 @@ html[data-theme="dark"] .str { color: #93c5fd; }
       </p>
     </div>
     <div class="col">
-      <pre class="code"><span class="cmt"># apm-policy.yml</span>
-<span class="kw">allow</span>:
-  <span class="kw">sources</span>:
-    - github.com/microsoft/*
-    - github.com/anthropics/*
-    - dev.azure.com/contoso/*
-  <span class="kw">mcp</span>:
-    - io.github.github/github-mcp-server
-    - io.github.microsoft/playwright-mcp
+      <pre class="code" style="font-size:13px;"><span class="cmt"># <org>/.github/apm-policy.yml — auto-discovered for every repo in the org</span>
+<span class="kw">name</span>: <span class="str">"Contoso Engineering Policy"</span>
+<span class="kw">version</span>: <span class="str">"1.0.0"</span>
+<span class="kw">enforcement</span>: block          <span class="cmt"># warn | block | off</span>
 
-<span class="kw">deny</span>:
-  <span class="kw">primitives</span>:
-    - hooks   <span class="cmt"># no shell hooks org-wide</span>
+<span class="kw">dependencies</span>:
+  <span class="kw">allow</span>:
+    - <span class="str">"contoso/**"</span>
+    - <span class="str">"microsoft/*"</span>
+  <span class="kw">deny</span>:
+    - <span class="str">"untrusted-org/**"</span>
+  <span class="kw">require</span>:
+    - contoso/agent-standards     <span class="cmt"># every repo must pull this</span>
+  <span class="kw">max_depth</span>: 5                  <span class="cmt"># cap transitive depth</span>
+  <span class="kw">require_pinned_constraint</span>: true   <span class="cmt"># ban floating refs</span>
 
-<span class="kw">require</span>:
-  <span class="kw">signed</span>: true
-  <span class="kw">lockfile</span>: present</pre>
+<span class="kw">mcp</span>:
+  <span class="kw">allow</span>:
+    - <span class="str">"io.github.github/*"</span>
+  <span class="kw">transport</span>:
+    <span class="kw">allow</span>: [stdio, streamable-http]
+  <span class="kw">self_defined</span>: warn           <span class="cmt"># ad-hoc MCP entries warn</span>
+
+<span class="kw">compilation</span>:
+  <span class="kw">target</span>:
+    <span class="kw">allow</span>: [copilot]              <span class="cmt"># copilot is an alias for vscode</span></pre>
+      <p style="font-size:12px; color:var(--cp-text-muted); margin-top: 6px;">
+        Wire <code>apm audit --ci --policy org</code> into PR checks — produces SARIF, renders inline on the PR diff via GitHub Code Scanning. Note: package signing is not yet implemented; lockfile presence is enforced as a baseline audit check (<code>lockfile-exists</code>), not a policy field.
+      </p>
     </div>
   </div>
 </section>
 
 <section class="slide">
-  <div class="eyebrow">AgentRC — part 1 of 2</div>
+  <div class="eyebrow">AgentRC — part 1 of 2 · <span style="color:var(--cp-warning);">experimental</span></div>
   <h1>AgentRC: context engineering, automated</h1>
-  <h3>APM <em>distributes</em> agent context. AgentRC <em>generates</em> and <em>maintains</em> it.</h3>
+  <h3>APM <em>distributes</em> agent context. AgentRC <em>generates</em> and <em>maintains</em> it. <span style="color:var(--cp-text-muted); font-size:14px; font-weight:400;">(repo is marked experimental — pin a commit if you adopt it)</span></h3>
   <div class="two-col full">
     <div class="col">
       <h2>What</h2>
@@ -666,7 +711,7 @@ html[data-theme="dark"] .str { color: #93c5fd; }
     <span class="arrow">→</span>
     <div class="node accent">agentrc<br/><span style="font-weight:400;color:var(--cp-text-muted);font-size:11px;">measure · generate · eval</span></div>
     <span class="arrow">→</span>
-    <div class="node">.instructions.md<br/>mcp.json · eval.json</div>
+    <div class="node">.github/copilot-instructions.md<br/>.vscode/mcp.json · agentrc.eval.json</div>
     <span class="arrow">→</span>
     <div class="node accent">apm.yml<br/><span style="font-weight:400;color:var(--cp-text-muted);font-size:11px;">pack · publish</span></div>
     <span class="arrow">→</span>
@@ -802,29 +847,30 @@ const CLI_SCRIPTS = {
   install: [
     { t: '$ apm install', cls: 'prompt' },
     { t: 'Resolving apm.yml…', cls: 'info', delay: 350 },
-    { t: '  → anthropics/skills/skills/frontend-design  ok', cls: 'muted', delay: 250 },
+    { t: '  → github/awesome-copilot/skills/review-and-refactor  ok', cls: 'muted', delay: 250 },
     { t: '  → github/awesome-copilot/plugins/context-engineering@v2.1  ok', cls: 'muted', delay: 250 },
     { t: '  → microsoft/apm-sample-package@v1.0.0  ok', cls: 'muted', delay: 250 },
     { t: 'Scanning for hidden Unicode…  clean', cls: 'info', delay: 300 },
-    { t: 'Verifying content hashes against apm.lock…  match', cls: 'info', delay: 300 },
-    { t: 'Compiling to: copilot, claude, cursor, codex, AGENTS.md', cls: 'info', delay: 350 },
-    { t: '✓ 14 packages installed · 6 targets written · 0 warnings', cls: 'ok', delay: 300 },
+    { t: 'Verifying content hashes against apm.lock.yaml…  match', cls: 'info', delay: 300 },
+    { t: 'Deploying primitives → .github/, .vscode/, AGENTS.md', cls: 'info', delay: 350 },
+    { t: '✓ 14 packages installed · 0 warnings', cls: 'ok', delay: 300 },
   ],
   add: [
     { t: '$ apm install vercel-labs/agent-skills --skill deploy-to-vercel', cls: 'prompt' },
     { t: 'Fetching package…', cls: 'info', delay: 400 },
     { t: 'Persisting to apm.yml:', cls: 'muted', delay: 250 },
     { t: '  + vercel-labs/agent-skills/skills/deploy-to-vercel', cls: 'ok', delay: 200 },
-    { t: 'Updating apm.lock with content hash…', cls: 'info', delay: 300 },
-    { t: '✓ added 1 skill · recompiled 6 targets', cls: 'ok', delay: 300 },
+    { t: 'Updating apm.lock.yaml with content hash…', cls: 'info', delay: 300 },
+    { t: '✓ added 1 skill · run `apm install` to deploy', cls: 'ok', delay: 300 },
   ],
   compile: [
     { t: '$ apm compile -t copilot', cls: 'prompt' },
-    { t: 'Reading apm.lock…', cls: 'info', delay: 250 },
+    { t: 'Reading apm.lock.yaml…', cls: 'info', delay: 250 },
     { t: 'Rendering instructions → .github/copilot-instructions.md', cls: 'info', delay: 350 },
-    { t: 'Rendering prompts     → .github/prompts/', cls: 'info', delay: 300 },
-    { t: 'Rendering MCP config  → .vscode/mcp.json', cls: 'info', delay: 300 },
-    { t: '✓ zero-config: VS Code + Copilot will pick this up automatically', cls: 'ok', delay: 300 },
+    { t: 'Rendering instructions → .github/instructions/*.instructions.md', cls: 'info', delay: 300 },
+    { t: 'Rendering cross-tool context → AGENTS.md', cls: 'info', delay: 300 },
+    { t: '✓ zero-config: VS Code + Copilot pick this up automatically', cls: 'ok', delay: 300 },
+    { t: 'note: prompts, agents, skills, MCP are deployed by `apm install`', cls: 'muted', delay: 250 },
   ],
   audit: [
     { t: '$ apm audit', cls: 'prompt' },
@@ -836,11 +882,14 @@ const CLI_SCRIPTS = {
     { t: 'Exit 1 — fix policy violations or update apm-policy.yml', cls: 'warn', delay: 300 },
   ],
   pack: [
-    { t: '$ apm pack ./my-plugin', cls: 'prompt' },
-    { t: 'Bundling primitives…', cls: 'info', delay: 350 },
+    { t: '$ apm install   # populate deployed_files in apm.lock.yaml first', cls: 'muted' },
+    { t: '$ apm pack', cls: 'prompt' },
+    { t: 'Bundling primitives from .apm/ …', cls: 'info', delay: 350 },
     { t: '  + 3 instructions, 2 skills, 1 prompt, 1 agent', cls: 'muted', delay: 250 },
-    { t: 'Writing plugin.json (Copilot/Claude/Cursor schemas)', cls: 'info', delay: 300 },
-    { t: '✓ my-plugin-1.0.0.tgz   (sha256: 4f8c…ae12)', cls: 'ok', delay: 300 },
+    { t: 'Writing plugin.json + embedded apm.lock.yaml (SHA-256 per file)', cls: 'info', delay: 300 },
+    { t: '✓ ./build/code-review/   (target-agnostic bundle)', cls: 'ok', delay: 300 },
+    { t: '$ apm pack --archive   # single tarball for offline delivery', cls: 'prompt', delay: 350 },
+    { t: '✓ ./build/code-review-1.2.0.tar.gz', cls: 'ok', delay: 250 },
   ],
 };
 let cliTimer = null;
@@ -883,14 +932,14 @@ function initCliDemo() {
 // ---------- Package assembly playground ----------
 const PACKAGES = [
   {
-    id: 'frontend-design',
-    label: 'frontend-design',
-    source: 'anthropics/skills/skills/frontend-design',
+    id: 'review-and-refactor',
+    label: 'review-and-refactor',
+    source: 'github/awesome-copilot/skills/review-and-refactor',
     kind: 'skill',
-    md: `## Frontend design conventions
-- Use semantic HTML and CSS variables for theming.
-- Co-locate component styles with components.
-- Prefer composition over inheritance for reusable UI.`
+    md: `## Review & refactor conventions
+- Review for security, perf, naming, and missing tests.
+- Refactor in small, behavior-preserving steps.
+- Prefer composition; keep modules cohesive.`
   },
   {
     id: 'context-engineering',
@@ -941,7 +990,7 @@ Activate when designing or reviewing HTTP/gRPC APIs.
 - Use for end-to-end test authoring and debugging.`
   },
 ];
-const selected = new Set(['frontend-design', 'context-engineering', 'github-mcp']);
+const selected = new Set(['review-and-refactor', 'context-engineering', 'github-mcp']);
 
 function renderPicks() {
   const wrap = document.querySelector('#pkgList');

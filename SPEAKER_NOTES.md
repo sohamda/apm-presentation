@@ -47,52 +47,63 @@
 
 - **Live demo slide.** Click through each flow: install, install-pkg, compile, audit, pack. The terminal animates illustratively — be clear with the audience these are scripted, not live processes.
 - Talking points per command:
-  - `apm install` — resolve, scan, hash, compile in one shot. Single source of truth.
-  - `apm install <pkg>` — drop-in replacement for `npx skills add`, but persisted to the manifest and locked.
-  - `apm compile -t copilot` — zero-config. VS Code + Copilot read `.github/copilot-instructions.md` automatically. APM itself dogfoods this.
-  - `apm audit` — show the "fails with policy violation" path. This is what they'll want in CI.
-  - `apm pack` — for plugin authors and internal package authors.
+  - `apm install` — resolves the manifest, scans for hidden Unicode, verifies content hashes against `apm.lock.yaml`, then **deploys** primitives to `.github/`, `.vscode/`, and writes `AGENTS.md`. Single source of truth.
+  - `apm install <pkg>` — adds the package to `apm.yml` and updates the lockfile; run `apm install` (no args) to deploy.
+  - `apm compile -t copilot` — regenerates only the *rendered instructions* files (`.github/copilot-instructions.md`, `.github/instructions/*.instructions.md`). Note for the audience: prompts, agents, skills, hooks, commands, and MCP are deployed by `apm install`, not by `compile`.
+  - `apm audit` — runs the 8 baseline + 19 policy checks, exit 1 on violation. SARIF output renders inline on PRs via Code Scanning. This is what they'll wire into CI (`apm audit --ci`).
+  - `apm pack` — runs from the package root after an `apm install`; emits a target-agnostic bundle at `./build/<name>/` containing `plugin.json` + plugin-native subdirs (`agents/`, `skills/`, `commands/`, `instructions/`, `hooks/`) + embedded `apm.lock.yaml`. Add `--archive` for a single `.tar.gz` (offline / air-gapped delivery).
 
 ## Slide 7 — Compile targets (1.5 min)
 
-- Hammer home: **one manifest renders to all of these.** Copilot, Claude Code, Cursor, OpenCode, Codex, Gemini, Windsurf.
-- Architects: this is your hedge against agent vendor lock-in. The harness can change; your context stays.
+- **Lead with Copilot.** This deck is for a Copilot shop: the headline is "`apm install` is zero-config for Copilot — it writes the files `.github/` and `.vscode/` already expect."
+- Mention the other harnesses in one sentence: APM also emits `AGENTS.md` in the repo root (the open agents.md standard), so if a teammate uses Claude Code, Cursor, Codex, Gemini, OpenCode, or Windsurf, their agent is configured from the same manifest. Your hedge against agent vendor lock-in — context survives the harness.
 
 ## Slide 8 — Interactive playground (3 min)
 
 - **Live demo slide.** Toggle packages on and off. Two things happen in real time:
   - The `apm.yml` rebuilds itself — show MCP entries land in a separate `mcp:` block.
   - The generated `AGENTS.md` recomposes; line count updates.
-- The point: **agent context is composable.** You're not editing one mega-file; you're declaring dependencies.
+- Call out the command above the right-hand panel: **`apm install`** is what deploys primitives and writes the rendered instructions (including the `AGENTS.md` shown). For Copilot specifically that includes `.github/copilot-instructions.md`, `.github/prompts/`, `.github/instructions/`, and `.vscode/mcp.json`. `apm compile` regenerates just the instructions files.
+- The point: **agent context is composable.** You're not editing one mega-file; you're declaring dependencies and letting APM render the per-harness output.
 - Optional invite: *"Anyone want to suggest a package to add?"* Adds engagement.
 
-## Slide 9 — Plugins & marketplaces (1.5 min)
+## Slide 9 — Plugins & bundles (2 min)
 
-- Quick. Two ideas:
-  1. Plugins can depend on other APM packages — real transitive deps.
-  2. `apm pack` exports a standard `plugin.json` so the same plugin lands in Copilot, Claude, Cursor.
-- Marketplaces = curated registries. One install command, lockfile-pinned.
+- Lead with the **why**: a single skill or instruction file is not a workflow. Real capabilities — code review, release notes, incident triage — need *several primitives bundled together*.
+- Walk through the **Code Review plugin example**:
+  - Instructions (the rubric)
+  - Agent file (activates on `/review`)
+  - Two skills (summarise diff, find missing tests)
+  - One MCP server (post PR comments)
+- Hammer the comparison: **without a plugin**, every dev wires four files by hand. **With an APM plugin**, one `apm install acme/code-review` drops all four primitives into the right places under `.github/` and `.vscode/` and pins them in `apm.lock.yaml`.
+- Show the right-hand code: primitives live as files under `.apm/` (instructions/, agents/, skills/), not as a `primitives:` block in `apm.yml`. `apm.yml` declares only deps. The `dependencies.apm` block shows a transitive dep on `shared-style-guide`.
+- `apm pack` (no positional arg) runs from the package root, after `apm install`, and writes `./build/<name>/`. The bundle content is `plugin.json` + plugin-native subdirs (`agents/`, `skills/`, `commands/`, `instructions/`, `hooks/`) populated from your `.apm/` source + embedded `apm.lock.yaml`. Add `--archive` for a single `.tar.gz`. The bundle is **target-agnostic** — harness-specific paths are decided at install-time, not pack-time.
+- Marketplaces in one line: curated registries, one install, lockfile-pinned. `apm pack` emits `marketplace.json` alongside the bundle when declared.
 
 ## Slide 10 — Security (1.5 min)
 
 - Six cards; don't read them all. Anchor on:
   - **Hidden Unicode scanning** — bidi/zero-width attacks are a real vector for prompt injection. APM blocks them at install.
-  - **Lockfile integrity** — same model as `package-lock.json`, but for prompts.
+  - **Lockfile integrity** — `apm.lock.yaml` records SHA-256 per file. Bundles embed it too, so installing a bundle rehashes every file before writing.
   - **MCP trust gating** — transitive MCP servers don't sneak in.
+- **Be honest:** package signing is *not yet implemented* — the security docs say so explicitly. Don't claim it. The integrity story today is content-hash + lockfile + source allow-listing.
 - For the security architects in the room: this is the slide they'll screenshot.
 
 ## Slide 11 — Governance (1.5 min)
 
-- **Tighten-only inheritance** is the key phrase. Enterprise sets the ceiling. Org tightens. Repo tightens further.
-- Walk through the `apm-policy.yml` sample: allow-list of sources, allow-list of MCP servers, deny shell hooks, require signed packages and a present lockfile.
-- Architects' takeaway: you can roll APM out org-wide without losing control over what agents are allowed to load.
+- **Tighten-only inheritance** is the key phrase. Enterprise sets the ceiling. Org tightens. Repo tightens further. (Allow = intersection, deny = union, max_depth = min, enforcement escalates `off < warn < block`.)
+- Walk through the real `apm-policy.yml` sample on the right — the top-level keys are: `name`, `version`, `enforcement` (warn|block|off), `dependencies` (allow / deny / require / max_depth / require_pinned_constraint), `mcp` (allow / deny / transport.allow / self_defined), `compilation` (target allow-list), `manifest` (required fields), plus `extends`, `fetch_failure`, `cache`, `unmanaged_files`, `registry_source`.
+- **Auto-discovery:** drop the file at `<org>/.github/apm-policy.yml` and every repo in the org picks it up — no per-repo wiring.
+- **CI gate:** `apm audit --ci --policy org` runs 8 baseline + 19 policy checks, emits SARIF, renders on the PR via Code Scanning.
+- **Bypass surfaces (for incident response):** `apm install --no-policy` and `APM_POLICY_DISABLE=1`. Mention these honestly; audit logs still record the bypass.
+- Architects' takeaway: you can roll APM out org-wide without losing control over what agents load.
 
 ## Slide 12 — AgentRC, part 1 (2 min)
 
+- **Caveat upfront:** the AgentRC repo is currently marked **experimental** with a Warning banner. Fine to pilot; pin a commit if you adopt it.
 - Reframe: *"If APM is the manifest, AgentRC is what writes the content that goes in the manifest."*
 - Three commands map to the lifecycle: **measure** (`readiness`), **generate** (`instructions`), **maintain** (`eval`).
 - The eval angle is the one most people miss: **instructions only matter if they actually improve agent responses.** AgentRC measures that and fails CI if context regresses.
-- Caveat: AgentRC is marked **experimental** — fine to pilot, mention this honestly.
 
 ## Slide 13 — AgentRC + APM integration (1.5 min)
 
