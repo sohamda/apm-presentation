@@ -882,7 +882,7 @@ const CLI_SCRIPTS = {
     { t: '  hidden-unicode: 0 findings', cls: 'ok', delay: 250 },
     { t: '  lockfile-drift: 0 findings', cls: 'ok', delay: 250 },
     { t: '  policy-violations: 1', cls: 'warn', delay: 250 },
-    { t: '    └─ gitlab.com/ext/legacy-rules — source not in allow-list', cls: 'warn', delay: 250 },
+    { t: '    └─ github.com/ext/legacy-rules — source not in allow-list', cls: 'warn', delay: 250 },
     { t: 'Exit 1 — fix policy violations or update apm-policy.yml', cls: 'warn', delay: 300 },
   ],
   pack: [
@@ -967,8 +967,8 @@ Activate when designing or reviewing HTTP/gRPC APIs.
   },
   {
     id: 'security-rules',
-    label: 'security-rules (GitLab)',
-    source: 'gitlab.com/acme/coding-standards#v2.0',
+    label: 'security-rules (GitHub)',
+    source: 'github.com/acme/coding-standards#v2.0',
     kind: 'instructions',
     md: `## Security rules
 - Never log secrets, tokens, or PII.
