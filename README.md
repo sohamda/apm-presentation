@@ -3,6 +3,8 @@
 A self-contained HTML presentation (~16 slides, 30 min + Q&A) introducing **[APM](https://github.com/microsoft/apm)** — Microsoft's open-source dependency manager for AI agents — and how it composes with **[AgentRC](https://github.com/microsoft/agentrc)** for end-to-end context engineering.
 
 Target audience: **developers and architects** at a prospective enterprise customer.
+> 📝 **Companion blog post:** [Context Is Code: A Tour of APM and AgentRC](https://foojay.io/today/context-is-code-a-tour-of-apm-and-agentrc/) on foojay.io.
+
 
 ## What's in here
 
